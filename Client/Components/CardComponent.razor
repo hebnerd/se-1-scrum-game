@@ -1,0 +1,22 @@
+﻿@using ScrumGame.Shared.Cards;
+
+<div class="scrumgame-card" @ondragstart="HandleOnDragStart" draggable="true">
+    <p>@Card.Description</p>
+</div>
+
+@code
+{
+    [Parameter]
+    public Card Card { get; set; }
+    [Parameter]
+    public CardContainer Container { get; set; }
+
+    private void HandleOnDragStart()
+    {
+        if (Container.HandType != 1)
+        {
+            CardContainer.Payload = Card;
+            CardContainer.PayloadPrevious = Container;
+        }
+    }
+}

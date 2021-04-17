@@ -1,0 +1,74 @@
+﻿@using ScrumGame.Shared.Cards;
+
+<table class="scrumgame-container" style="@Style" @ondragenter="HandleOnDragEnter" @ondragend="HandleOnDragEnd">
+    <tr>
+    @foreach (var card in Cards)
+    {
+        <td>
+            <CardComponent Card="card" Container="this"></CardComponent>
+        </td>
+    }
+    </tr>
+</table>
+
+@code 
+{
+    public static Card Payload { get; set; }
+    public static CardContainer PayloadPrevious { get; set; }
+    public static CardContainer PayloadDestination { get; set; }
+    [Parameter]
+    public int HandType { get; set; }
+    [Parameter]
+    public string Style { get; set; }
+    public readonly List<Card> Cards = new List<Card>();
+
+
+    public void AddCard(Card card)
+    {
+        Cards.Add(card);
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void RemoveCard(Card card)
+    {
+        Cards.Remove(card);
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Clear()
+    {
+        Cards.Clear();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleOnDragEnter()
+    {
+        if (this.Cards.Count == 0 || HandType == 2)
+            PayloadDestination = this;
+        else
+            PayloadDestination = null;
+    }
+
+    private void HandleOnDragEnd()
+    {
+        if (CardContainer.PayloadDestination != null && CardContainer.Payload != null)
+        {
+            CardContainer.PayloadDestination.AddCard(CardContainer.Payload);
+
+            if (CardContainer.PayloadPrevious != null)
+            {
+                if (CardContainer.PayloadPrevious.Cards.Contains(CardContainer.Payload))
+                {
+                    CardContainer.PayloadPrevious.RemoveCard(CardContainer.Payload);
+                    CardContainer.PayloadPrevious = null;
+                }
+            }
+
+            CardContainer.Payload = null;
+            CardContainer.PayloadDestination = null;
+        }
+    }
+}

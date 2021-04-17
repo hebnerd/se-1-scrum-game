@@ -1,0 +1,419 @@
+﻿@using ScrumGame.Shared;
+@using ScrumGame.Shared.Players;
+@using ScrumGame.Client.Components;
+@using System.Timers;
+
+
+@page "/"
+
+<h1>Scrum Game</h1>
+@if (Victory)
+{
+    <h1>Backlog Empty! You win!</h1>
+}
+else if (ActivePlayer == null)
+{
+    <button @onclick="NextTurn">Start Game</button>
+}
+else
+{
+    <div class="player-list">
+        @foreach (var player in GameManager.Team.Players)
+        {
+            <h4 class="@(player == ActivePlayer ? "player-list-active" : string.Empty)">             
+                [@player.GetType().Name] @player.Name
+            </h4>                
+        }
+    </div>
+
+    <div class="player-backlog">
+        <h3>Current Story Progress: (@GameManager.Team.Backlog.CurrentProgressPoints / @GameManager.Team.Backlog.RequiredProgressPoints)</h3>
+        <h3>Backlog:</h3>
+        @for (var i = 0; i < GameManager.Team.Backlog.Stories.Count; i++)
+        {
+            var story = GameManager.Team.Backlog.Stories[i];
+            var number = i + 1;
+            <p >@number<span>.</span> @story.Description</p>
+        }
+    </div>
+
+    if (proposalStatus == 0 && ActivePlayerIndex == 1)
+    {
+        <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
+        <div class="modal game-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Attention Scrum Master!</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>A developer has proposed changing a story. Do you approve of the change?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button @onclick="HandleSMApprove" type="button" class="btn btn-primary">Yes</button>
+                        <button @onclick="HandleSMDisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    if (proposalStatus == 2 && ActivePlayerIndex == 1)
+    {
+        <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
+        <div class="modal game-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Attention Product Owner!</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Before your turn Product Owner, there is a story change proposal from the Scrum Master! Do you approve of this change?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button @onclick="HandlePOApprove" type="button" class="btn btn-primary">Yes</button>
+                        <button @onclick="HandlePODisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="grid-container">
+        <div class="play-container">
+            <h3>Play Card:</h3>
+            <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
+            @if (smDrawFree == true)
+            {
+                <button @onclick="HandleSMFreePlay">Play!</button>
+            }
+            else
+            {
+                <button @onclick="HandleOnClickPlay">Play!</button>
+            }
+        </div>
+
+        <div style="@generalDeckVisibility" class="general-deck">
+            <h3>@DeckType Deck:</h3>
+            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
+            <button @onclick="HandleOnClickDrawCard">Draw Card</button>
+        </div>
+
+        <div style="@smDrawFreeMessageVisibility" class="general-deck">
+            <h3>Attention Scrum Master!</h3>
+            <p>The change has been approved! Play a story change card.</p>
+        </div>
+
+        <div style="@visibility" class="implementation-deck">
+            <h3>Implementation Deck:</h3>
+            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
+            <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
+        </div>
+
+        <div class="hand">
+            <h3>@ActivePlayer.Name's Hand:</h3>
+            <CardContainer HandType=2 Style="width: 100%; height: 200px;" @ref="HandCardContainer"></CardContainer>
+
+            <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
+
+            <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
+
+            @if (ActivePlayer is Developer d)
+            {
+                <p>Dev Power: @d.DevPower</p>
+            }
+        </div>
+    </div>
+}
+
+@code
+{
+    public int ActivePlayerIndex { get; set; }
+    public bool Victory { get; set; }
+    public string DeckType { get; set; }
+    public Player ActivePlayer { get; set; }
+    public CardContainer HandCardContainer { get; set; }
+    public CardContainer PlayCardContainer { get; set; }
+    public CardContainer DeckCardContainer { get; set; }
+    public CardContainer ImpDeckContainer { get; set; }
+    public GameManager GameManager = new GameManager(new ProductOwner("Test Product Owner"), new ScrumMaster("Test Scrum Master"), new Developer("Test Developer"));
+    private Timer Time;
+    private bool FirstRun = true;
+    private string visibility = "display: none;";
+    private string StoryChangeButtonVisible = "display: none;"; // modifies display tag value for dev story change proposal button
+    private bool proposeChange = false; //indicates if story change proposal button shows for Developer
+    private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
+    private int tempActivePlayerIndex = 0;
+    private Player tempActivePlayer = null;
+    private bool smDrawFree = false;
+    private string smDrawFreeMessageVisibility = "display: none;";
+    private string generalDeckVisibility = "display: block;";
+    private string skipTurnButtonVisibility = "display: block;";
+
+    private void HandleOnClickPlay()
+    {
+        if (PlayCardContainer != null)
+        {
+            if (PlayCardContainer.Cards.Count > 0)
+            {
+                var card = PlayCardContainer.Cards[0];
+                card.Play(ActivePlayer);
+
+                PlayCardContainer.Clear();
+            }
+        }
+    }
+
+    private void HandleOnClickImpDrawCard()
+    {
+        ActivePlayer.Hand.Add(GameManager.ImplementationDeck.DrawCard());
+
+        NextTurn();
+    }
+
+    private void HandleOnClickDrawCard()
+    {
+        if (ActivePlayer != null)
+        {
+            switch (ActivePlayer)
+            {
+                case ProductOwner p:
+                    p.Hand.Add(GameManager.DilemmaDeck.DrawCard());
+                    break;
+                case ScrumMaster s:
+                    s.Hand.Add(GameManager.StoryChangeDeck.DrawCard());
+                    break;
+                case Developer d:
+                    d.Hand.Add(GameManager.EventCardDeck.DrawCard());
+                    break;
+            }
+
+            NextTurn();
+        }
+    }
+
+    public void NextTurn()
+    {
+        if (HandCardContainer != null)
+            HandCardContainer.Clear();
+
+        if (PlayCardContainer != null)
+            PlayCardContainer.Clear();
+
+        if (DeckCardContainer != null)
+            DeckCardContainer.Clear();
+
+        if (ImpDeckContainer != null)
+            ImpDeckContainer.Clear();
+
+        //If changing from Scrum Master, check if hand contains Change Story Cards
+        if (ActivePlayer is ScrumMaster && ActivePlayer.Hand.Count > 0)
+        {
+            //since change story card in active hand, draw button
+            proposeChange = true;
+        }
+
+        ActivePlayer = GameManager.Team.Players[ActivePlayerIndex++];
+        if (ActivePlayerIndex >= GameManager.Team.Players.Length)
+        {
+            ActivePlayerIndex = 0;
+        }
+
+        ChangeDeck();
+
+        //If turn changed to Developer
+        if (ActivePlayer is Developer)
+        {
+            if (proposeChange == true) //If SM has Story Change Card in hand, display proposal button
+            {
+                StoryChangeButtonVisible = "display: block;";
+            }
+            else //If SM doesn't have Story Change Card in hand
+            {
+                StoryChangeButtonVisible = "display: none;";
+            }
+        }
+        else //if current turn isn't Developer, hide button
+        {
+            StoryChangeButtonVisible = "display: none;";
+        }
+
+        foreach (var card in ActivePlayer.Hand)
+        {
+            HandCardContainer.AddCard(card);
+        }
+
+        if (GameManager.Team.Backlog.CurrentProgressPoints >= GameManager.Team.Backlog.RequiredProgressPoints)
+        {
+            GameManager.Team.Backlog.CurrentProgressPoints = 0;
+            GameManager.Team.Backlog.RequiredProgressPoints = 4;
+            GameManager.Team.Backlog.Stories.RemoveAt(0);
+        }
+
+        if (GameManager.Team.Backlog.Stories.Count == 0)
+        {
+            Victory = true;
+        }
+
+        if (FirstRun)
+        {
+            FirstRun = false;
+            Time = new Timer(3);
+            Time.Elapsed += ReLoad;
+            Time.Enabled = true;
+        }
+    }
+
+
+    private void ChangeDeck()
+    {
+        try
+        {
+            if (ActivePlayer != null)
+            {
+                switch (ActivePlayer)
+                {
+                    case ProductOwner p:
+                        DeckType = "Dilemma";
+                        DeckCardContainer.AddCard(GameManager.DilemmaDeck.Cards[0]);
+                        visibility = "display: none;";
+                        break;
+                    case ScrumMaster s:
+                        DeckType = "Change Story";
+                        DeckCardContainer.AddCard(GameManager.StoryChangeDeck.Cards[0]);
+                        break;
+                    case Developer d:
+                        DeckType = "Event";
+                        DeckCardContainer.AddCard(GameManager.EventCardDeck.Cards[0]);
+                        ImpDeckContainer.AddCard(GameManager.ImplementationDeck.Cards[0]);
+                        visibility = "display: block;";
+                        break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+        }
+    }
+
+
+    private void ReLoad(Object source, ElapsedEventArgs e)
+    {
+        if (HandCardContainer != null)
+            HandCardContainer.Clear();
+
+        if (PlayCardContainer != null)
+            PlayCardContainer.Clear();
+
+        if (DeckCardContainer != null)
+            DeckCardContainer.Clear();
+
+        DeckCardContainer.AddCard(GameManager.DilemmaDeck.Cards[0]);
+        Time.Dispose();
+    }
+
+    private void HandleOnClickDevProposeChange()
+    {
+        proposeChange = false; //reset proposeChange flag
+        proposalStatus = 0;
+        //make it scrum master turn temporarily for modal
+        tempActivePlayerIndex = ActivePlayerIndex; //store current active player index in holding field
+        tempActivePlayer = ActivePlayer; //store current active player context in holding field
+        ActivePlayerIndex = 1;
+        ActivePlayer = GameManager.Team.Players[ActivePlayerIndex]; //force Scrum master turn
+                                                                    //wait on SM input from prompt...
+    }
+
+    private void HandleSMApprove()
+    {
+        proposalStatus = 2; //SM Approved change
+        ActivePlayerIndex = tempActivePlayerIndex; //restore active player context from before prompt
+        ActivePlayer = tempActivePlayer;
+        NextTurn();
+    }
+
+    private void HandleSMDisapprove()
+    {
+        proposalStatus = 1; //SM denied change
+        ActivePlayerIndex = tempActivePlayerIndex; //restore active player context from before prompt
+        ActivePlayer = tempActivePlayer;
+        NextTurn();
+    }
+
+    private void HandlePOApprove()
+    {
+        tempActivePlayerIndex = ActivePlayerIndex; //store Product Owner player index before switching to SM context
+        tempActivePlayer = ActivePlayer; //store Product Owner context before switching to SM context
+
+        proposalStatus = 1; //reset proposalStatus after product owner approves story change
+        smDrawFree = true; //set Scrum Master to draw free Story Change Card
+
+        //Let Scrum Master play card for free
+        ActivePlayerIndex = 1;
+        ActivePlayer = GameManager.Team.Players[ActivePlayerIndex];
+
+        //render Scrum Master Cards
+        skipTurnButtonVisibility = "display: none;";
+        generalDeckVisibility = "display: none;";
+        smDrawFreeMessageVisibility = "display: block;";
+
+        if (HandCardContainer != null)
+            HandCardContainer.Clear();
+
+        if (PlayCardContainer != null)
+            PlayCardContainer.Clear();
+
+        if (DeckCardContainer != null)
+            DeckCardContainer.Clear();
+
+        if (ImpDeckContainer != null)
+            ImpDeckContainer.Clear();
+
+        foreach (var card in ActivePlayer.Hand)
+        {
+            HandCardContainer.AddCard(card);
+        }
+
+        //restore product owner turn in HandleSMFreePlay
+    }
+
+    private void HandlePODisapprove()
+    {
+        proposalStatus = 1; //reset proposalStatus flag from PO story change disapproval
+        smDrawFree = false; //deny Scrum Master free card draw
+    }
+
+    private void HandleSMFreePlay()
+    {
+        HandleOnClickPlay(); //play the card selected by Scrum Master
+
+        smDrawFree = false; //disable SM free Story Change Card turn
+
+        ActivePlayerIndex = tempActivePlayerIndex; //restore product owner index
+        ActivePlayer = tempActivePlayer; //reset product owner turn
+
+        //render Product Owner's cards here
+        smDrawFreeMessageVisibility = "display: none;";
+        generalDeckVisibility = "display: block;";
+        skipTurnButtonVisibility = "display: block";
+
+        if (HandCardContainer != null)
+            HandCardContainer.Clear();
+
+        if (PlayCardContainer != null)
+            PlayCardContainer.Clear();
+
+        if (DeckCardContainer != null)
+            DeckCardContainer.Clear();
+
+        if (ImpDeckContainer != null)
+            ImpDeckContainer.Clear();
+
+        ChangeDeck();
+
+        foreach (var card in ActivePlayer.Hand)
+        {
+            HandCardContainer.AddCard(card);
+        }
+    }
+}

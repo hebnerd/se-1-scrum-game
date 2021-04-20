@@ -13,7 +13,7 @@
 }
 else if (ActivePlayer == null)
 {
-    <button @onclick="NextTurn">Start Game</button>
+    <button id="start-game-button" @onclick="NextTurn">Start Game</button>
 }
 else
 {
@@ -85,11 +85,11 @@ else
             <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
             @if (smDrawFree == true)
             {
-                <button @onclick="HandleSMFreePlay">Play!</button>
+                <button id="play-button" @onclick="HandleSMFreePlay">Play!</button>
             }
             else
             {
-                <button @onclick="HandleOnClickPlay">Play!</button>
+                <button id="play-button" @onclick="HandleOnClickPlay">Play!</button>
             }
         </div>
 

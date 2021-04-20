@@ -152,15 +152,14 @@ else
 
     private void HandleOnClickPlay()
     {
-        if (PlayCardContainer != null)
+        if (PlayCardContainer != null && PlayCardContainer.Cards.Count > 0)
         {
-            if (PlayCardContainer.Cards.Count > 0)
-            {
-                var card = PlayCardContainer.Cards[0];
-                card.Play(ActivePlayer);
+            var card = PlayCardContainer.Cards[0];
+            card.Play(ActivePlayer);
 
-                PlayCardContainer.Clear();
-            }
+            PlayCardContainer.Clear();
+
+            ActivePlayer.Hand.Remove(card);
         }
     }
 

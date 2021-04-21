@@ -142,7 +142,7 @@ else
     private string visibility = "display: none;";
     private string StoryChangeButtonVisible = "display: none;"; // modifies display tag value for dev story change proposal button
     private bool proposeChange = false; //indicates if story change proposal button shows for Developer
-    private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
+    public int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
     private int tempActivePlayerIndex = 0;
     private Player tempActivePlayer = null;
     private bool smDrawFree = false;
@@ -264,7 +264,6 @@ else
         }
     }
 
-
     private void ChangeDeck()
     {
         try
@@ -321,7 +320,7 @@ else
         tempActivePlayer = ActivePlayer; //store current active player context in holding field
         ActivePlayerIndex = 1;
         ActivePlayer = GameManager.Team.Players[ActivePlayerIndex]; //force Scrum master turn
-                                                                    //wait on SM input from prompt...
+                                                                    //wait on SM input from prompt../
     }
 
     private void HandleSMApprove()

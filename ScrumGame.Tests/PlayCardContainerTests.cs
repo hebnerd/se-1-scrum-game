@@ -32,7 +32,7 @@ namespace ScrumGame.Tests
             Assert.NotEmpty(page.Instance.PlayCardContainer.Cards);
 
             // Click the play button, which plays the card
-            page.Find("#play-button").Click();
+            page.Find("#play-button").Click();            
 
             // The play card container should be empty again
             Assert.Empty(page.Instance.PlayCardContainer.Cards);

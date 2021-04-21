@@ -297,6 +297,10 @@ else
 
             GameManager = new GameManager(players.ToArray());
         }
+        //recycle card from last turn
+        if (CardBuffer != null)
+            RecycleCard();
+
 
         if (HandCardContainer != null)
             HandCardContainer.Clear();
@@ -316,10 +320,6 @@ else
             //since change story card in active hand, draw button
             proposeChange = true;
         }
-
-        //recycle card from last turn
-        if (CardBuffer != null)
-            RecycleCard();
 
         ActivePlayer = GameManager.Team.Players[ActivePlayerIndex++];
         if (ActivePlayerIndex >= GameManager.Team.Players.Length)
@@ -587,6 +587,8 @@ else
     private void HandleSMFreePlay()
     {
         HandleOnClickPlay(); //play the card selected by Scrum Master
+        PlayButtonVisible = "display: block;";
+
 
         smDrawFree = false; //disable SM free Story Change Card turn
 

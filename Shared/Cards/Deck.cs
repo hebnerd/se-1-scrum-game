@@ -77,6 +77,7 @@ namespace ScrumGame.Shared.Cards
         public void AddCard(T card)
         {
             Cards.Add(card);
+            ChangeCountCardText();
             Shuffle();
         }
 

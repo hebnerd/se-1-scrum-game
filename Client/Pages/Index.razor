@@ -96,7 +96,7 @@ else
         <div style="@generalDeckVisibility" class="general-deck">
             <h3>@DeckType Deck:</h3>
             <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
-            <button @onclick="HandleOnClickDrawCard">Draw Card</button>
+            <button id="draw-card-button" @onclick="HandleOnClickDrawCard">Draw Card</button>
         </div>
 
         <div style="@smDrawFreeMessageVisibility" class="general-deck">
@@ -107,7 +107,7 @@ else
         <div style="@visibility" class="implementation-deck">
             <h3>Implementation Deck:</h3>
             <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
-            <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
+            <button id="draw-card-button" @onclick="HandleOnClickImpDrawCard">Draw Card</button>
         </div>
 
         <div class="hand">
@@ -116,7 +116,7 @@ else
 
             <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
 
-            <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
+            <button id="propose-story-change-button" @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
 
             @if (ActivePlayer is Developer d)
             {

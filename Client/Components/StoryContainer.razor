@@ -1,0 +1,75 @@
+﻿@using ScrumGame.Shared;
+
+<table class="scrumgame-container" style="@Style" @ondragenter="HandleOnDragEnter" @ondragend="HandleOnDragEnd">
+    <tr>
+        @if (Story != null)
+        {
+            <td>
+                <StoryComponent Story="Story" SContainer="this" Priority="Priority" Drag="@Draggable"></StoryComponent>
+            </td>
+        }
+    </tr>
+</table>
+
+@code
+{
+    public static Story Payload { get; set; }
+    public static StoryContainer PayloadPrevious { get; set; }
+    public static StoryContainer PayloadDestination { get; set; }
+    [Parameter]
+    public string Style { get; set; }
+    public Story Story { get; set; }
+    [Parameter]
+    public int Priority { get; set; }
+    public string Draggable { get; set; }
+
+    public Story AddStory(Story story, bool Drag)
+    {
+        Story swapStory = Story;    //the story to swap out
+        Story = story;
+        if (Drag)
+            Draggable = "true";
+        else
+            Draggable = "false";
+
+        InvokeAsync(StateHasChanged);
+
+        return swapStory;
+    }
+
+    public void Empty()
+    {
+        Story = null;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleOnDragEnter()
+    {
+        PayloadDestination = this;
+    }
+
+    private void HandleOnDragEnd()
+    {
+        Story swapStory;    //the story to be swapped out
+        bool Drag;
+        if (PayloadDestination.Draggable == "true")
+            Drag = true;
+        else
+            Drag = false;
+
+        if (StoryContainer.PayloadDestination != null && StoryContainer.Payload != null && Drag)
+        {
+            swapStory = StoryContainer.PayloadDestination.AddStory(StoryContainer.Payload, true);
+
+            if (StoryContainer.PayloadPrevious != null)
+            {
+                StoryContainer.PayloadPrevious.AddStory(swapStory, true);
+                StoryContainer.PayloadPrevious = null;
+            }
+
+            CardContainer.Payload = null;
+            CardContainer.PayloadDestination = null;
+        }
+    }
+}

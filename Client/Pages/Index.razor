@@ -13,6 +13,40 @@
 }
 else if (ActivePlayer == null)
 {
+    <p>Product Owner:</p>
+    <p>
+        <input @bind="_productOwnerName" />
+    </p>
+    <p>Scrum Master:</p>
+    <p>
+        <input @bind="_scrumMasterName" />
+    </p>
+    <p>Number of Developers:</p>
+    <p>
+        <button @onclick="DecreaseDevs">-</button> @_developers <button @onclick="IncreaseDevs">+</button>
+    </p>
+
+    @for (var i = 0; i < _developers; i++)
+    {
+        <p>
+            Developer:
+        </p>
+        <p>
+            @if (i == 0)
+            {
+                <input @bind="_dev1Name" />
+            }
+            else if (i == 1)
+            {
+                <input @bind="_dev2Name" />
+            }
+            else if (i == 2)
+            {
+                <input @bind="_dev3Name" />
+            }
+        </p>
+    }
+
     <button @onclick="NextTurn">Start Game</button>
 }
 else
@@ -20,110 +54,112 @@ else
     <div class="player-list">
         @foreach (var player in GameManager.Team.Players)
         {
-            <h4 class="@(player == ActivePlayer ? "player-list-active" : string.Empty)">             
+            <h4 class="@(player == ActivePlayer ? "player-list-active" : string.Empty)">
                 [@player.GetType().Name] @player.Name
-            </h4>                
+            </h4>
         }
     </div>
 
     <div class="player-backlog">
         <h3>Current Story Progress: (@GameManager.Team.Backlog.CurrentProgressPoints / @GameManager.Team.Backlog.RequiredProgressPoints)</h3>
         <h3>Backlog:</h3>
-        @for (var i = 0; i < GameManager.Team.Backlog.Stories.Count; i++)
+    </div>
+
+    <div class="scrumgame-container" style="height: 220px">
+        <StoryContainer Priority="1" Style="width: 100%; height: 20px;" @ref="StoryCont1"></StoryContainer>
+        <StoryContainer Priority="2" Style="width: 100%; height: 20px;" @ref="StoryCont2"></StoryContainer>
+        <StoryContainer Priority="3" Style="width: 100%; height: 20px;" @ref="StoryCont3"></StoryContainer>
+        <StoryContainer Priority="4" Style="width: 100%; height: 20px;" @ref="StoryCont4"></StoryContainer>
+        <button @onclick="HandleOnClickSave" style="margin: auto; @saveBacklogVisibile">Save Backlog</button>
+    </div>
+
+if (proposalStatus == 0 && ActivePlayerIndex == 1)
+{
+    <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
+    <div class="modal game-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Attention Scrum Master!</h5>
+                </div>
+                <div class="modal-body">
+                    <p>A developer has proposed changing a story. Do you approve of the change?</p>
+                </div>
+                <div class="modal-footer">
+                    <button @onclick="HandleSMApprove" type="button" class="btn btn-primary">Yes</button>
+                    <button @onclick="HandleSMDisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+if (proposalStatus == 2 && ActivePlayerIndex == 1)
+{
+    <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
+    <div class="modal game-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Attention Product Owner!</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Before your turn Product Owner, there is a story change proposal from the Scrum Master! Do you approve of this change?</p>
+                </div>
+                <div class="modal-footer">
+                    <button @onclick="HandlePOApprove" type="button" class="btn btn-primary">Yes</button>
+                    <button @onclick="HandlePODisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="grid-container">
+    <div class="play-container">
+        <h3>Play Card:</h3>
+        <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
+        @if (smDrawFree == true)
         {
-            var story = GameManager.Team.Backlog.Stories[i];
-            var number = i + 1;
-            <p >@number<span>.</span> @story.Description</p>
+            <button @onclick="HandleSMFreePlay">Play!</button>
+        }
+        else
+        {
+            <button @onclick="HandleOnClickPlay" style="@PlayButtonVisible">Play!</button>
         }
     </div>
 
-    if (proposalStatus == 0 && ActivePlayerIndex == 1)
-    {
-        <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
-        <div class="modal game-modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Attention Scrum Master!</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p>A developer has proposed changing a story. Do you approve of the change?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button @onclick="HandleSMApprove" type="button" class="btn btn-primary">Yes</button>
-                        <button @onclick="HandleSMDisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
-    if (proposalStatus == 2 && ActivePlayerIndex == 1)
-    {
-        <!-- Notify Scrum Master dialogue here with Yes/No buttons -->
-        <div class="modal game-modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Attention Product Owner!</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p>Before your turn Product Owner, there is a story change proposal from the Scrum Master! Do you approve of this change?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button @onclick="HandlePOApprove" type="button" class="btn btn-primary">Yes</button>
-                        <button @onclick="HandlePODisapprove" type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
-    <div class="grid-container">
-        <div class="play-container">
-            <h3>Play Card:</h3>
-            <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
-            @if (smDrawFree == true)
-            {
-                <button @onclick="HandleSMFreePlay">Play!</button>
-            }
-            else
-            {
-                <button @onclick="HandleOnClickPlay">Play!</button>
-            }
-        </div>
-
-        <div style="@generalDeckVisibility" class="general-deck">
-            <h3>@DeckType Deck:</h3>
-            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
-            <button @onclick="HandleOnClickDrawCard">Draw Card</button>
-        </div>
-
-        <div style="@smDrawFreeMessageVisibility" class="general-deck">
-            <h3>Attention Scrum Master!</h3>
-            <p>The change has been approved! Play a story change card.</p>
-        </div>
-
-        <div style="@visibility" class="implementation-deck">
-            <h3>Implementation Deck:</h3>
-            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
-            <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
-        </div>
-
-        <div class="hand">
-            <h3>@ActivePlayer.Name's Hand:</h3>
-            <CardContainer HandType=2 Style="width: 100%; height: 200px;" @ref="HandCardContainer"></CardContainer>
-
-            <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
-
-            <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
-
-            @if (ActivePlayer is Developer d)
-            {
-                <p>Dev Power: @d.DevPower</p>
-            }
-        </div>
+    <div style="@generalDeckVisibility" class="general-deck">
+        <h3>@DeckType Deck:</h3>
+        <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
+        <button @onclick="HandleOnClickDrawCard">Draw Card</button>
     </div>
+
+    <div style="@smDrawFreeMessageVisibility" class="general-deck">
+        <h3>Attention Scrum Master!</h3>
+        <p>The change has been approved! Play a story change card.</p>
+    </div>
+
+    <div style="@visibility" class="implementation-deck">
+        <h3>Implementation Deck:</h3>
+        <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
+        <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
+    </div>
+
+    <div class="hand">
+        <h3>@ActivePlayer.Name's Hand:</h3>
+        <CardContainer HandType=2 Style="width: 100%; height: 200px;" @ref="HandCardContainer"></CardContainer>
+
+        <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
+
+        <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
+
+        @if (ActivePlayer is Developer d)
+        {
+            <p>Dev Power: @d.DevPower</p>
+        }
+    </div>
+</div>
 }
 
 @code
@@ -136,19 +172,38 @@ else
     public CardContainer PlayCardContainer { get; set; }
     public CardContainer DeckCardContainer { get; set; }
     public CardContainer ImpDeckContainer { get; set; }
-    public GameManager GameManager = new GameManager(new ProductOwner("Test Product Owner"), new ScrumMaster("Test Scrum Master"), new Developer("Test Developer"));
+    //it seems you can't @ref an array item, so had to do seperatly
+    public StoryContainer StoryCont1 { get; set; }
+    public StoryContainer StoryCont2 { get; set; }
+    public StoryContainer StoryCont3 { get; set; }
+    public StoryContainer StoryCont4 { get; set; }
+    public GameManager GameManager { get; protected set; }
     private Timer Time;
     private bool FirstRun = true;
     private string visibility = "display: none;";
     private string StoryChangeButtonVisible = "display: none;"; // modifies display tag value for dev story change proposal button
+    private string PlayButtonVisible = "display: block;";
+    private string saveBacklogVisibile = "display: none;";
     private bool proposeChange = false; //indicates if story change proposal button shows for Developer
     private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
     private int tempActivePlayerIndex = 0;
     private Player tempActivePlayer = null;
     private bool smDrawFree = false;
+    private int _developers = 1;
     private string smDrawFreeMessageVisibility = "display: none;";
     private string generalDeckVisibility = "display: block;";
     private string skipTurnButtonVisibility = "display: block;";
+    private string _productOwnerName;
+    private string _scrumMasterName;
+    private string _dev1Name;
+    private string _dev2Name;
+    private string _dev3Name;
+
+
+    private void HandleOnClickSave()
+    {
+        SaveBacklog();
+    }
 
     private void HandleOnClickPlay()
     {
@@ -160,12 +215,29 @@ else
             PlayCardContainer.Clear();
 
             ActivePlayer.Hand.Remove(card);
+
+            if (GameManager.Team.Backlog.RequiredProgressPoints < 1)
+                GameManager.Team.Backlog.RequiredProgressPoints = 1;
+
+            if (GameManager.Team.Backlog.CurrentProgressPoints >= GameManager.Team.Backlog.RequiredProgressPoints)
+            {
+                GameManager.Team.Backlog.CurrentProgressPoints = 0;
+                GameManager.Team.Backlog.RequiredProgressPoints = 4;
+                GameManager.Team.Backlog.Stories.RemoveAt(0);
+                InitializeStoryContainers(true);
+            }
+
+            if (GameManager.Team.Backlog.CurrentProgressPoints < 0)
+                GameManager.Team.Backlog.CurrentProgressPoints = 0;
+
+            PlayButtonVisible = "display: none;";
         }
     }
 
     private void HandleOnClickImpDrawCard()
     {
-        ActivePlayer.Hand.Add(GameManager.ImplementationDeck.DrawCard());
+        if (GameManager.ImplementationDeck.Cards.Count > 1)
+            ActivePlayer.Hand.Add(GameManager.ImplementationDeck.DrawCard());
 
         NextTurn();
     }
@@ -177,13 +249,16 @@ else
             switch (ActivePlayer)
             {
                 case ProductOwner p:
-                    p.Hand.Add(GameManager.DilemmaDeck.DrawCard());
+                    if(GameManager.DilemmaDeck.Cards.Count > 1)
+                        p.Hand.Add(GameManager.DilemmaDeck.DrawCard());
                     break;
                 case ScrumMaster s:
-                    s.Hand.Add(GameManager.StoryChangeDeck.DrawCard());
+                    if (GameManager.StoryChangeDeck.Cards.Count > 1)
+                        s.Hand.Add(GameManager.StoryChangeDeck.DrawCard());
                     break;
                 case Developer d:
-                    d.Hand.Add(GameManager.EventCardDeck.DrawCard());
+                    if (GameManager.EventCardDeck.Cards.Count > 1)
+                        d.Hand.Add(GameManager.EventCardDeck.DrawCard());
                     break;
             }
 
@@ -193,6 +268,32 @@ else
 
     public void NextTurn()
     {
+        if (ActivePlayer == null)
+        {
+            var players = new List<Player>
+            {
+
+                new ProductOwner(_productOwnerName),
+
+                new ScrumMaster(_scrumMasterName),
+
+                new Developer(_dev1Name)
+
+            };
+
+            if (!string.IsNullOrEmpty(_dev2Name))
+            {
+                players.Add(new Developer(_dev2Name));
+            }
+
+            if (!string.IsNullOrEmpty(_dev3Name))
+            {
+                players.Add(new Developer(_dev3Name));
+            }
+
+            GameManager = new GameManager(players.ToArray());
+        }
+
         if (HandCardContainer != null)
             HandCardContainer.Clear();
 
@@ -220,9 +321,12 @@ else
 
         ChangeDeck();
 
+
         //If turn changed to Developer
         if (ActivePlayer is Developer)
         {
+            //JS.InvokeAsync<string>("setStoriesDraggable", false);
+
             if (proposeChange == true) //If SM has Story Change Card in hand, display proposal button
             {
                 StoryChangeButtonVisible = "display: block;";
@@ -237,16 +341,24 @@ else
             StoryChangeButtonVisible = "display: none;";
         }
 
+        bool Drag = true;
+        if (ActivePlayer is ProductOwner)
+        {
+            Drag = true;
+            saveBacklogVisibile = "display: block;";
+        }
+        else
+        {
+            Drag = false;
+            saveBacklogVisibile = "display: none;";
+        }
+
+        PlayButtonVisible = "display: block;";
+        InitializeStoryContainers(Drag);
+
         foreach (var card in ActivePlayer.Hand)
         {
             HandCardContainer.AddCard(card);
-        }
-
-        if (GameManager.Team.Backlog.CurrentProgressPoints >= GameManager.Team.Backlog.RequiredProgressPoints)
-        {
-            GameManager.Team.Backlog.CurrentProgressPoints = 0;
-            GameManager.Team.Backlog.RequiredProgressPoints = 4;
-            GameManager.Team.Backlog.Stories.RemoveAt(0);
         }
 
         if (GameManager.Team.Backlog.Stories.Count == 0)
@@ -263,6 +375,47 @@ else
         }
     }
 
+
+    private void InitializeStoryContainers(bool Drag)
+    {
+        int numStories = GameManager.Team.Backlog.Stories.Count;
+
+        if (StoryCont1 != null && numStories >= 1)
+            StoryCont1.AddStory(GameManager.Team.Backlog.Stories[0], Drag);
+        else if (StoryCont1 != null && numStories < 4)
+            StoryCont1.Empty();
+
+        if (StoryCont2 != null && numStories >= 2)
+            StoryCont2.AddStory(GameManager.Team.Backlog.Stories[1], Drag);
+        else if (StoryCont2 != null && numStories < 4)
+            StoryCont2.Empty();
+
+        if (StoryCont3 != null && numStories >= 3)
+            StoryCont3.AddStory(GameManager.Team.Backlog.Stories[2], Drag);
+        else if (StoryCont3 != null && numStories < 4)
+            StoryCont3.Empty();
+
+        if (StoryCont4 != null && numStories >= 4)
+            StoryCont4.AddStory(GameManager.Team.Backlog.Stories[3], Drag);
+        else if (StoryCont4 != null && numStories < 4)
+            StoryCont4.Empty();
+
+    }
+
+    private void SaveBacklog()
+    {
+        if (StoryCont1.Story != null)
+            GameManager.Team.Backlog.Stories[0] = StoryCont1.Story;
+
+        if (StoryCont2.Story != null)
+            GameManager.Team.Backlog.Stories[1] = StoryCont2.Story;
+
+        if (StoryCont3.Story != null)
+            GameManager.Team.Backlog.Stories[2] = StoryCont3.Story;
+
+        if (StoryCont4.Story != null)
+            GameManager.Team.Backlog.Stories[3] = StoryCont4.Story;
+    }
 
     private void ChangeDeck()
     {
@@ -292,6 +445,7 @@ else
         }
         catch (Exception e)
         {
+            string useless = e.Message;
         }
     }
 
@@ -306,6 +460,8 @@ else
 
         if (DeckCardContainer != null)
             DeckCardContainer.Clear();
+
+        InitializeStoryContainers(true);
 
         DeckCardContainer.AddCard(GameManager.DilemmaDeck.Cards[0]);
         Time.Dispose();
@@ -374,6 +530,18 @@ else
         }
 
         //restore product owner turn in HandleSMFreePlay
+    }
+
+    private void DecreaseDevs()
+    {
+        if (_developers > 1)
+            _developers--;
+    }
+
+    private void IncreaseDevs()
+    {
+        if (_developers < 3)
+            _developers++;
     }
 
     private void HandlePODisapprove()

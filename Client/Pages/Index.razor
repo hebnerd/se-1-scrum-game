@@ -5,7 +5,6 @@
 
 
 @page "/"
-@inject IJSRuntime JS; 
 
 <h1>Scrum Game</h1>
 @if (Victory)
@@ -224,7 +223,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
                 GameManager.Team.Backlog.CurrentProgressPoints = 0;
                 GameManager.Team.Backlog.RequiredProgressPoints = 4;
                 GameManager.Team.Backlog.Stories.RemoveAt(0);
-                InitializeStoryContainers();
+                InitializeStoryContainers(true);
             }
 
             if (GameManager.Team.Backlog.CurrentProgressPoints < 0)
@@ -300,8 +299,6 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
         if (ImpDeckContainer != null)
             ImpDeckContainer.Clear();
 
-        InitializeStoryContainers();
-
         //If changing from Scrum Master, check if hand contains Change Story Cards
         if (ActivePlayer is ScrumMaster && ActivePlayer.Hand.Count > 0)
         {
@@ -317,10 +314,11 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
 
         ChangeDeck();
 
+
         //If turn changed to Developer
         if (ActivePlayer is Developer)
         {
-            JS.InvokeAsync<string>("setStoriesDraggable", false);
+            //JS.InvokeAsync<string>("setStoriesDraggable", false);
 
             if (proposeChange == true) //If SM has Story Change Card in hand, display proposal button
             {
@@ -336,16 +334,19 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
             StoryChangeButtonVisible = "display: none;";
         }
 
+        bool Drag = true;
         if (ActivePlayer is ProductOwner)
         {
-            JS.InvokeAsync<string>("setStoriesDraggable", true);
+            Drag = true;
             saveBacklogVisibile = "display: block;";
         }
         else
         {
-            JS.InvokeAsync<string>("setStoriesDraggable", false);
+            Drag = false;
             saveBacklogVisibile = "display: none;";
         }
+
+        InitializeStoryContainers(Drag);
 
         foreach (var card in ActivePlayer.Hand)
         {
@@ -367,34 +368,30 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
     }
 
 
-    private void InitializeStoryContainers()
+    private void InitializeStoryContainers(bool Drag)
     {
         int numStories = GameManager.Team.Backlog.Stories.Count;
 
         if (StoryCont1 != null && numStories >= 1)
-            StoryCont1.AddStory(GameManager.Team.Backlog.Stories[0]);
-
+            StoryCont1.AddStory(GameManager.Team.Backlog.Stories[0], Drag);
         else if (StoryCont1 != null && numStories < 4)
             StoryCont1.Empty();
 
         if (StoryCont2 != null && numStories >= 2)
-            StoryCont2.AddStory(GameManager.Team.Backlog.Stories[1]);
-
+            StoryCont2.AddStory(GameManager.Team.Backlog.Stories[1], Drag);
         else if (StoryCont2 != null && numStories < 4)
             StoryCont2.Empty();
 
         if (StoryCont3 != null && numStories >= 3)
-            StoryCont3.AddStory(GameManager.Team.Backlog.Stories[2]);
-
+            StoryCont3.AddStory(GameManager.Team.Backlog.Stories[2], Drag);
         else if (StoryCont3 != null && numStories < 4)
             StoryCont3.Empty();
 
-
         if (StoryCont4 != null && numStories >= 4)
-            StoryCont4.AddStory(GameManager.Team.Backlog.Stories[3]);
-
+            StoryCont4.AddStory(GameManager.Team.Backlog.Stories[3], Drag);
         else if (StoryCont4 != null && numStories < 4)
             StoryCont4.Empty();
+
     }
 
     private void SaveBacklog()
@@ -456,7 +453,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
         if (DeckCardContainer != null)
             DeckCardContainer.Clear();
 
-        InitializeStoryContainers();
+        InitializeStoryContainers(true);
 
         DeckCardContainer.AddCard(GameManager.DilemmaDeck.Cards[0]);
         Time.Dispose();

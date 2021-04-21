@@ -5,12 +5,8 @@
         @if (Story != null)
         {
             <td>
-                <StoryComponent Story="Story" SContainer="this" Priority="Priority"></StoryComponent>
+                <StoryComponent Story="Story" SContainer="this" Priority="Priority" Drag="@Draggable"></StoryComponent>
             </td>
-        }
-        else
-        {
-            <td></td>
         }
     </tr>
 </table>
@@ -25,12 +21,16 @@
     public Story Story { get; set; }
     [Parameter]
     public int Priority { get; set; }
+    public string Draggable { get; set; }
 
-
-    public Story AddStory(Story story)
+    public Story AddStory(Story story, bool Drag)
     {
         Story swapStory = Story;    //the story to swap out
         Story = story;
+        if (Drag)
+            Draggable = "true";
+        else
+            Draggable = "false";
 
         InvokeAsync(StateHasChanged);
 
@@ -52,13 +52,19 @@
     private void HandleOnDragEnd()
     {
         Story swapStory;    //the story to be swapped out
-        if (StoryContainer.PayloadDestination != null && StoryContainer.Payload != null)
+        bool Drag;
+        if (PayloadDestination.Draggable == "true")
+            Drag = true;
+        else
+            Drag = false;
+
+        if (StoryContainer.PayloadDestination != null && StoryContainer.Payload != null && Drag)
         {
-            swapStory = StoryContainer.PayloadDestination.AddStory(StoryContainer.Payload);
+            swapStory = StoryContainer.PayloadDestination.AddStory(StoryContainer.Payload, true);
 
             if (StoryContainer.PayloadPrevious != null)
             {
-                StoryContainer.PayloadPrevious.AddStory(swapStory);
+                StoryContainer.PayloadPrevious.AddStory(swapStory, true);
                 StoryContainer.PayloadPrevious = null;
             }
 

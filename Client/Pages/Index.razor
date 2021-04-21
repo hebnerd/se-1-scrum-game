@@ -96,7 +96,7 @@ else
         <div style="@generalDeckVisibility" class="general-deck">
             <h3>@DeckType Deck:</h3>
             <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
-            <button @onclick="HandleOnClickDrawCard">Draw Card</button>
+            <button id="draw-card-button" @onclick="HandleOnClickDrawCard">Draw Card</button>
         </div>
 
         <div style="@smDrawFreeMessageVisibility" class="general-deck">
@@ -107,7 +107,7 @@ else
         <div style="@visibility" class="implementation-deck">
             <h3>Implementation Deck:</h3>
             <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
-            <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
+            <button id="draw-card-button" @onclick="HandleOnClickImpDrawCard">Draw Card</button>
         </div>
 
         <div class="hand">
@@ -116,7 +116,7 @@ else
 
             <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
 
-            <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
+            <button id="story-change-button" @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
 
             @if (ActivePlayer is Developer d)
             {
@@ -142,7 +142,7 @@ else
     private string visibility = "display: none;";
     private string StoryChangeButtonVisible = "display: none;"; // modifies display tag value for dev story change proposal button
     private bool proposeChange = false; //indicates if story change proposal button shows for Developer
-    private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
+    public int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
     private int tempActivePlayerIndex = 0;
     private Player tempActivePlayer = null;
     private bool smDrawFree = false;
@@ -264,7 +264,6 @@ else
         }
     }
 
-
     private void ChangeDeck()
     {
         try
@@ -312,7 +311,7 @@ else
         Time.Dispose();
     }
 
-    private void HandleOnClickDevProposeChange()
+    prviate void HandleOnClickDevProposeChange()
     {
         proposeChange = false; //reset proposeChange flag
         proposalStatus = 0;
@@ -321,7 +320,7 @@ else
         tempActivePlayer = ActivePlayer; //store current active player context in holding field
         ActivePlayerIndex = 1;
         ActivePlayer = GameManager.Team.Players[ActivePlayerIndex]; //force Scrum master turn
-                                                                    //wait on SM input from prompt...
+                                                                    //wait on SM input from prompt../
     }
 
     private void HandleSMApprove()

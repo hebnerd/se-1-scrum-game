@@ -1,0 +1,21 @@
+﻿@using ScrumGame.Shared;
+
+<div class="scrumgame-story" @ondragstart="HandleOnDragStart" draggable="true">
+    <p>@Priority. @Story.Description</p>
+</div>
+
+@code
+{
+    [Parameter]
+    public Story Story { get; set; }
+    [Parameter]
+    public StoryContainer SContainer { get; set; }
+    [Parameter]
+    public int Priority { get; set; }
+
+    private void HandleOnDragStart()
+    {
+        StoryContainer.Payload = Story;
+        StoryContainer.PayloadPrevious = SContainer;
+    }
+}

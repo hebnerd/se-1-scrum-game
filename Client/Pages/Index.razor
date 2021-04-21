@@ -125,7 +125,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
         }
         else
         {
-            <button @onclick="HandleOnClickPlay">Play!</button>
+            <button @onclick="HandleOnClickPlay" style="@PlayButtonVisible">Play!</button>
         }
     </div>
 
@@ -182,6 +182,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
     private bool FirstRun = true;
     private string visibility = "display: none;";
     private string StoryChangeButtonVisible = "display: none;"; // modifies display tag value for dev story change proposal button
+    private string PlayButtonVisible = "display: block;";
     private string saveBacklogVisibile = "display: none;";
     private bool proposeChange = false; //indicates if story change proposal button shows for Developer
     private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
@@ -228,12 +229,15 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
 
             if (GameManager.Team.Backlog.CurrentProgressPoints < 0)
                 GameManager.Team.Backlog.CurrentProgressPoints = 0;
+
+            PlayButtonVisible = "display: none;";
         }
     }
 
     private void HandleOnClickImpDrawCard()
     {
-        ActivePlayer.Hand.Add(GameManager.ImplementationDeck.DrawCard());
+        if (GameManager.ImplementationDeck.Cards.Count > 1)
+            ActivePlayer.Hand.Add(GameManager.ImplementationDeck.DrawCard());
 
         NextTurn();
     }
@@ -245,13 +249,16 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
             switch (ActivePlayer)
             {
                 case ProductOwner p:
-                    p.Hand.Add(GameManager.DilemmaDeck.DrawCard());
+                    if(GameManager.DilemmaDeck.Cards.Count > 1)
+                        p.Hand.Add(GameManager.DilemmaDeck.DrawCard());
                     break;
                 case ScrumMaster s:
-                    s.Hand.Add(GameManager.StoryChangeDeck.DrawCard());
+                    if (GameManager.StoryChangeDeck.Cards.Count > 1)
+                        s.Hand.Add(GameManager.StoryChangeDeck.DrawCard());
                     break;
                 case Developer d:
-                    d.Hand.Add(GameManager.EventCardDeck.DrawCard());
+                    if (GameManager.EventCardDeck.Cards.Count > 1)
+                        d.Hand.Add(GameManager.EventCardDeck.DrawCard());
                     break;
             }
 
@@ -346,6 +353,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
             saveBacklogVisibile = "display: none;";
         }
 
+        PlayButtonVisible = "display: block;";
         InitializeStoryContainers(Drag);
 
         foreach (var card in ActivePlayer.Hand)

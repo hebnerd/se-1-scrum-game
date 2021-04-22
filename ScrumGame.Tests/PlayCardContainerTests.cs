@@ -72,5 +72,39 @@ namespace ScrumGame.Tests
             // Ensure all cards have been removed after playing
             Assert.Empty(indexComponent.Instance.PlayCardContainer.Cards);
         }
+
+        /// <summary>
+        /// Verifies that when a story change can be proposed by a developer,
+        /// that when "HandleOnClickDevProposeChange" is executed, the modal
+        /// dialog appears for the Scrum Master (assume the Scrum Master
+        /// denies) and that it doesn't appear for the Product Owner.
+        /// </summary>
+        [Fact]
+        public void HandleSMDisapproveTest()
+        {
+            using var context = new TestContext();
+            var indexComponent = context.RenderComponent<Index>(); //Render the Index page
+
+            // Start the game
+            indexComponent.Find("#start-game-button").Click();
+
+            // Draw a card for Product Owner
+            indexComponent.Find("#draw-card-button").Click();
+
+            // Draw a card for Scrum Master
+            indexComponent.Find("#draw-card-button").Click();
+
+            // Developer proposes a story change to the Scrum Master
+            indexComponent.Find("#propose-story-change-button").Click();
+
+            // Wait for modal to appear for the Scrum Master, click 'No' to deny the story change proposal
+            new WaitForAssertionHelper(indexComponent, () => indexComponent.Find(".btn-secondary").Click(), TimeSpan.FromSeconds(3d));
+
+            // Assert that active player is now the Product Owner
+            Assert.True(indexComponent.Instance.ActivePlayer is ProductOwner);
+
+            // Assert that the modal does not prompt the Product Owner after Scrum Master denies (proposalStatus == 1)
+            Assert.Equal(1, indexComponent.Instance.proposalStatus);
+        }
     }
 }

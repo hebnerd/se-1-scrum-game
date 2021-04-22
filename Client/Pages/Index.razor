@@ -23,7 +23,7 @@ else if (ActivePlayer == null)
     </p>
     <p>Number of Developers:</p>
     <p>
-        <button @onclick="DecreaseDevs">-</button> @_developers <button @onclick="IncreaseDevs">+</button>
+        <button @onclick="DecreaseDevs">-</button> @_developers <button id="increase-devs-button" @onclick="IncreaseDevs">+</button>
     </p>
 
     @for (var i = 0; i < _developers; i++)
@@ -47,7 +47,7 @@ else if (ActivePlayer == null)
         </p>
     }
 
-    <button @onclick="NextTurn">Start Game</button>
+    <button id="start-game-button" @onclick="NextTurn">Start Game</button>
 }
 else
 {
@@ -115,48 +115,48 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
     </div>
 }
 
-<div class="grid-container">
-    <div class="play-container">
-        <h3>Play Card:</h3>
-        <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
-        @if (smDrawFree == true)
-        {
-            <button @onclick="HandleSMFreePlay">Play!</button>
-        }
-        else
-        {
-            <button @onclick="HandleOnClickPlay" style="@PlayButtonVisible">Play!</button>
-        }
-    </div>
+    <div class="grid-container">
+        <div class="play-container">
+            <h3>Play Card:</h3>
+            <CardContainer HandType=0 Style="width: 150px; height: 200px;" @ref="PlayCardContainer"></CardContainer>
+            @if (smDrawFree == true)
+            {
+                <button id="play-button" @onclick="HandleSMFreePlay">Play!</button>
+            }
+            else
+            {
+                <button id="play-button" @onclick="HandleOnClickPlay" style="@PlayButtonVisible">Play!</button>
+            }
+        </div>
 
-    <div style="@generalDeckVisibility" class="general-deck">
-        <h3>@DeckType Deck:</h3>
-        <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
-        <button @onclick="HandleOnClickDrawCard">Draw Card</button>
-    </div>
+        <div style="@generalDeckVisibility" class="general-deck">
+            <h3>@DeckType Deck:</h3>
+            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="DeckCardContainer"></CardContainer>
+            <button @onclick="HandleOnClickDrawCard">Draw Card</button>
+        </div>
 
     <div style="@smDrawFreeMessageVisibility" class="general-deck">
         <h3>Attention Scrum Master!</h3>
         <p>The change has been approved! Play a story change card.</p>
     </div>
 
-    <div style="@visibility" class="implementation-deck">
-        <h3>Implementation Deck:</h3>
-        <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
-        <button @onclick="HandleOnClickImpDrawCard">Draw Card</button>
-    </div>
+        <div style="@visibility" class="implementation-deck">
+            <h3>Implementation Deck:</h3>
+            <CardContainer HandType=1 Style="width: 150px; height: 200px;" @ref="ImpDeckContainer"></CardContainer>
+            <button id="draw-card-button" @onclick="HandleOnClickImpDrawCard">Draw Card</button>
+        </div>
 
     <div class="hand">
         <h3>@ActivePlayer.Name's Hand:</h3>
         <CardContainer HandType=2 Style="width: 100%; height: 200px;" @ref="HandCardContainer"></CardContainer>
 
-        <button @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
+        <button id="skip-turn-button" @onclick="NextTurn" style="@skipTurnButtonVisibility">Skip Turn</button>
 
-        <button @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
+            <button id="propose-story-change-button" @onclick="HandleOnClickDevProposeChange" style="@StoryChangeButtonVisible">Propose Story Change</button>
 
-        @if (ActivePlayer is Developer d)
-        {
-            <p>Dev Power: @d.DevPower</p>
+            @if (ActivePlayer is Developer d)
+            {
+                <p>Dev Power: @d.DevPower</p>
         }
     </div>
 </div>
@@ -177,7 +177,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
     public StoryContainer StoryCont2 { get; set; }
     public StoryContainer StoryCont3 { get; set; }
     public StoryContainer StoryCont4 { get; set; }
-    public GameManager GameManager { get; protected set; }
+    public GameManager GameManager { get; set; }
     private Timer Time;
     private bool FirstRun = true;
     private string visibility = "display: none;";
@@ -185,7 +185,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
     private string PlayButtonVisible = "display: block;";
     private string saveBacklogVisibile = "display: none;";
     private bool proposeChange = false; //indicates if story change proposal button shows for Developer
-    private int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
+    public int proposalStatus = 1; //indicates status of dev's story change proposal. 0 = accepted; 1 = denied by SM
     private int tempActivePlayerIndex = 0;
     private Player tempActivePlayer = null;
     private bool smDrawFree = false;
@@ -476,7 +476,7 @@ if (proposalStatus == 2 && ActivePlayerIndex == 1)
         tempActivePlayer = ActivePlayer; //store current active player context in holding field
         ActivePlayerIndex = 1;
         ActivePlayer = GameManager.Team.Players[ActivePlayerIndex]; //force Scrum master turn
-                                                                    //wait on SM input from prompt...
+                                                                    //wait on SM input from prompt../
     }
 
     private void HandleSMApprove()
